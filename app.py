@@ -2,12 +2,91 @@
 import random
 from flask import Flask, request
 from pymessenger.bot import Bot
-
+import requests
 app = Flask(__name__)
-ACCESS_TOKEN = 'ACCESS_TOKEN'
-VERIFY_TOKEN = 'VERIFY_TOKEN'
-bot = Bot(ACCESS_TOKEN)
+ACCESS_TOKEN = 'SECRET'
+VERIFY_TOKEN = 'SECRET'
 
+import json
+
+class VUSAMIFBOT(Bot):
+    pass
+    def set_get_started(self, gs_obj):
+        request_endpoint = '{0}/me/messenger_profile'.format(self.graph_url)
+        response = requests.post(
+            request_endpoint,
+            params = self.auth_args,
+            json = gs_obj
+        )
+        result = response.json()
+        return result
+
+    def set_greetings(self, g_obj):
+        request_endpoint = '{0}/me/messenger_profile'.format(self.graph_url)
+        response = requests.post(
+            request_endpoint,
+            params = self.auth_args,
+            json = g_obj
+        )
+        result = response.json()
+        return result
+    def set_persistent_menu(self, pm_obj):
+        request_endpoint = '{0}/me/messenger_profile'.format(self.graph_url)
+        response = requests.post(
+            request_endpoint,
+            params = self.auth_args,
+            json = pm_obj
+        )
+        result = response.json()
+        print(result)
+        return result
+
+bot = VUSAMIFBOT(ACCESS_TOKEN)
+
+greetings = { 
+  "get_started":{
+    "payload":"Success"
+  }
+}
+
+swx = {
+    "greeting":[
+  {
+    "locale":"default",
+    "text":"Sveiki, norėdami naudotis VU SA MIF DUK automatiniu atsakikliu pasirinkitę vieną iš žemiau pateiktų temų, kitu atveju užduokite savo klausimą"
+  }]
+}
+
+menu = {
+    "persistent_menu": [
+        {
+            "locale": "default",
+            "composer_input_disabled" : True,
+            "call_to_actions": [
+                {
+                    "type": "postback",
+                    "title": "Dariuką duokit",
+                    "payload": "CARE_HELP"
+                },
+                {
+                    "type": "postback",
+                    "title": "VU SA + LSP",
+                    "payload": "VUSA"
+                },
+                {
+                    "type": "postback",
+                    "title": "BUS + PD",
+                    "payload": "BUS"
+                }
+            ]
+        }
+    ]
+}
+
+
+bot.set_get_started(greetings)
+bot.set_persistent_menu(menu)
+bot.set_greetings(swx)
 #We will receive messages that Facebook sends our bot at this endpoint 
 @app.route("/", methods=['GET', 'POST'])
 def receive_message():
@@ -34,7 +113,6 @@ def receive_message():
                     response_sent_nontext = get_message()
                     send_message(recipient_id, response_sent_nontext)
     return "Message Processed"
-
 
 def verify_fb_token(token_sent):
     #take token sent by facebook and verify it matches the verify token you sent
